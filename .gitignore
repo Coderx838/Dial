@@ -1,0 +1,17 @@
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# os / editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# logs and scratch
+*.log
+node_modules/
+.wakatime-project
