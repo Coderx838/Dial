@@ -15,3 +15,10 @@ Thumbs.db
 *.log
 node_modules/
 .wakatime-project
+
+
+# host keys & secrets
+host_key
+host_key*
+*.pem
+*.key
