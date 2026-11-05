@@ -11,6 +11,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "morsee": "^1.0.10",
     "ssh2": "^1.16.0"
   },
   "allowScripts": {

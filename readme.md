@@ -67,7 +67,11 @@ ssh -p 2222 localhost
 | `/help` | all the commands you need to know about in-chat. |
 | `/quit` | go off air |
 
+
 (*AI usage note: AI is only used in debugging when i lose my mind due to a bug , except for this and some nest server lag problem fix AI is not used anywhere else.*)
+
+(*there are some easter eggs in the chat , hunt for them*)
+
 
 -----------------------------------------------------------------------------------------------------------------------------------------
 
