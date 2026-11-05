@@ -66,4 +66,4 @@ ssh -p 2222 localhost
 
 -----------------------------------------------------------------------------------------------------------------------------------------
 
-made by a teen for [hackclub ysws](https://crescent.hackclub.com/)
+made by a teen for [hackclub ysws](https://crescent.hackclub.com/).
