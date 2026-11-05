@@ -1,10 +1,12 @@
 # *Dial* 
 
-*A little radio chat you ssh into.*
+*A little radio chat you ssh into. and  then you can talk to anyone worldwide via your terminal yeh(but , they also need to be on the radio tho)*
 
 ## *Why does this exist:*
 
 (*Because somebody said "what if there can be a radio where strangers can talk" and nobody stopped them.*)
+
+(*And also cuz the [Crescent's multiplayer card](https://crescent.hackclub.com/guides/multiplayer) gave me a new reason for creating my this long envisioned project.*)
 
 ## *How it works:*
 
@@ -21,6 +23,10 @@ ssh -p 3453 2a01:4f9:3080:3192::1994
 
 
 ## *Screenshot:*
+
+
+![alt text](image.png)
+(*this is for your welcome!!*)
 
 
 ![alt text](image-1.png)
@@ -58,12 +64,11 @@ ssh -p 2222 localhost
 | `/theme chalk` | parchment, pad, chalk, blueprint |
 | `/doodle 3` | change your little face |
 | `/name sam` | change what people call you |
-| `/help` | the list you're reading but in-game |
+| `/help` | all the commands you need to know about in-chat. |
 | `/quit` | go off air |
 
-
-
+(*AI usage note: AI is only used in debugging when i lose my mind due to a bug , except for this and some nest server lag problem fix AI is not used anywhere else.*)
 
 -----------------------------------------------------------------------------------------------------------------------------------------
 
-made by a teen for [hackclub ysws](https://crescent.hackclub.com/).
+Made by a teen for [hackclub ysws](https://crescent.hackclub.com/).

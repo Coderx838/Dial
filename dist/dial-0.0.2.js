@@ -20280,6 +20280,16 @@ var require_hub = __commonJS({
         }
         return out;
       }
+      // handle uniqueness check 100% yeh
+      handleTaken(handle, selfId) {
+        const h = String(handle).trim().toLocaleLowerCase();
+        if (!h) return false;
+        for (const s of this.sessions.values()) {
+          if (s.id === selfId) continue;
+          if (s.handle && s.handle.trim().toLocaleLowerCase() === h) return true;
+        }
+        return false;
+      }
       // everyone tuned within the range of a freq
       nearby(freq, range) {
         range = range === void 0 ? MAX_AUDIBLE : range;
@@ -20872,7 +20882,7 @@ var require_session = __commonJS({
         this.handle = "";
         this.pendingHandle = "";
         this.doodleIdx = Math.floor(Math.random() * DOODLES.length);
-        this.theme = getTheme("parchment");
+        this.theme = getTheme("chalk");
         this.freq = 104.2;
         this.cols = 80;
         this.rows = 24;
@@ -21025,7 +21035,20 @@ var require_session = __commonJS({
           if (ch === "\r" || ch === "\n") {
             const name = this.pendingHandle.trim();
             if (name.length >= 1) {
-              this.handle = sanitizeHandle(name);
+              const clean = sanitizeHandle(name);
+              if (this.hub.handleTaken(clean, this.id)) {
+                this.stream.write(styledLine(
+                  [["  '" + clean + "' is already on air. pick another.", this.theme.muted]],
+                  this.theme
+                ));
+                this.stream.write("\r\n" + styledLine(
+                  [[" what should i call you? ", this.theme.accent]],
+                  this.theme
+                ));
+                this.pendingHandle = "";
+                return;
+              }
+              this.handle = clean;
               this.pendingHandle = "";
               this.stream.write("\r\n");
               this.showDoodlePicker();
@@ -21327,7 +21350,12 @@ var require_session = __commonJS({
           return;
         }
         const old = this.handle;
-        this.handle = sanitizeHandle(name);
+        const clean = sanitizeHandle(name);
+        if (this.hub.handleTaken(clean, this.id)) {
+          this.systemSay("'" + clean + "' is already on air. pick another.");
+          return;
+        }
+        this.handle = clean;
         this.systemSay(old + " is now " + this.handle);
       }
       cmdWho() {
