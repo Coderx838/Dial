@@ -20459,7 +20459,7 @@ var require_bubble = __commonJS({
       const rows = [];
       const top = wobbleLine(inner + 4, frame, "top");
       rows.push(["  " + top, inkColor]);
-      const lines = wrapLocal(text, inner);
+      const lines = wrapLocal(text, inner - 1);
       for (const line of lines) {
         const padded = line.padEnd(inner, " ");
         rows.push([" (" + padded + ")", inkColor]);
@@ -20829,6 +20829,170 @@ var require_themes = __commonJS({
   }
 });
 
+// node_modules/morsee/src/dictionary.js
+var require_dictionary = __commonJS({
+  "node_modules/morsee/src/dictionary.js"(exports2, module2) {
+    var letters = {
+      a: ".-",
+      b: "-...",
+      c: "-.-.",
+      d: "-..",
+      e: ".",
+      f: "..-.",
+      g: "--.",
+      h: "....",
+      i: "..",
+      j: ".---",
+      k: "-.-",
+      l: ".-..",
+      m: "--",
+      n: "-.",
+      o: "---",
+      p: ".--.",
+      q: "--.-",
+      r: ".-.",
+      s: "...",
+      t: "-",
+      u: "..-",
+      v: "...-",
+      w: ".--",
+      x: "-..-",
+      y: "-.--",
+      z: "--.."
+    };
+    var numbers = {
+      0: "-----",
+      1: ".----",
+      2: "..---",
+      3: "...--",
+      4: "....-",
+      5: ".....",
+      6: "-....",
+      7: "--...",
+      8: "---..",
+      9: "----."
+    };
+    var nonEnglish = {
+      \u00E1: ".--.-",
+      \u00E0: "\xB7\u2212\u2212\xB7\u2212",
+      // shared by à, å
+      \u00E4: "\xB7\u2212\xB7\u2212",
+      // shared by ä, æ, ą
+      \u00E5: "\xB7\u2212\u2212\xB7\u2212",
+      // shared by à, å
+      \u0105: "\xB7\u2212\xB7\u2212",
+      // shared by ä, æ, ą
+      \u00E6: "\xB7\u2212\xB7\u2212",
+      // shared by ä, æ, ą
+      \u0107: "\u2212\xB7\u2212\xB7\xB7",
+      // shared by ć, ĉ, ç
+      \u0109: "\u2212\xB7\u2212\xB7\xB7",
+      // shared by ć, ĉ, ç
+      \u00E7: "\u2212\xB7\u2212\xB7\xB7",
+      // shared by ć, ĉ, ç
+      \u0111: "\xB7\xB7\u2212\xB7\xB7",
+      // shared by đ, é, ę
+      \u00F0: "\xB7\xB7\u2212\u2212\xB7",
+      \u00E9: "\xB7\xB7\u2212\xB7\xB7",
+      // shared by đ, é, ę
+      \u00E8: "\xB7\u2212\xB7\xB7\u2212",
+      // shared by è, ł
+      \u0119: "\xB7\xB7\u2212\xB7\xB7",
+      // shared by đ, é, ę
+      \u011D: "\u2212\u2212\xB7\u2212\xB7",
+      \u0125: "\u2212\u2212\u2212\u2212",
+      // shared by ĥ, š
+      \u0135: "\xB7\u2212\u2212\u2212\xB7",
+      \u0142: "\xB7\u2212\xB7\xB7\u2212",
+      // shared by è, ł
+      \u0144: "\u2212\u2212\xB7\u2212\u2212",
+      // shared by ń, ñ
+      \u00F1: "\u2212\u2212\xB7\u2212\u2212",
+      // shared by ń, ñ
+      \u00F3: "\u2212\u2212\u2212\xB7",
+      // shared by ó, ö, ø
+      \u00F6: "\u2212\u2212\u2212\xB7",
+      // shared by ó, ö, ø
+      \u00F8: "\u2212\u2212\u2212\xB7",
+      // shared by ó, ö, ø
+      \u015B: "\xB7\xB7\xB7\u2212\xB7\xB7\xB7",
+      \u015D: "\xB7\xB7\xB7\u2212\xB7",
+      \u0161: "\u2212\u2212\u2212\u2212",
+      // shared by ĥ, š
+      \u00FE: "\xB7\u2212\u2212\xB7\xB7",
+      \u00FC: "\xB7\xB7\u2212\u2212",
+      // shared by ü, ŭ
+      \u016D: "\xB7\xB7\u2212\u2212",
+      // shared by ü, ŭ
+      \u017A: "\u2212\u2212\xB7\xB7\u2212\xB7",
+      \u017C: "\u2212\u2212\xB7\xB7\u2212"
+    };
+    var punctuation = {
+      "&": ".-...",
+      "'": ".----.",
+      "@": ".--.-.",
+      $: "\xB7\xB7\xB7\u2212\xB7\xB7\u2212",
+      ")": "-.--.-",
+      "(": "-.--.",
+      ":": "---...",
+      ",": "--..--",
+      ";": "\u2212\xB7\u2212\xB7\u2212\xB7",
+      "=": "-...-",
+      "!": "-.-.--",
+      ".": ".-.-.-",
+      "-": "-....-",
+      _: "\xB7\xB7\u2212\u2212\xB7\u2212",
+      "+": ".-.-.",
+      '"': ".-..-.",
+      "?": "..--..",
+      "/": "-..-."
+    };
+    var extra = {
+      " ": "/",
+      "\n": ".-.-"
+    };
+    var toMorse = {
+      ...letters,
+      ...numbers,
+      ...nonEnglish,
+      ...punctuation,
+      ...extra
+    };
+    var fromMorse = Object.keys(toMorse).reduce(
+      (obj, char) => ({ ...obj, [toMorse[char]]: char }),
+      {}
+    );
+    module2.exports = {
+      toMorse,
+      fromMorse
+    };
+  }
+});
+
+// node_modules/morsee/src/lib.js
+var require_lib3 = __commonJS({
+  "node_modules/morsee/src/lib.js"(exports2, module2) {
+    var { toMorse, fromMorse } = require_dictionary();
+    var encode = (str) => [...str.toLowerCase()].map((letter) => toMorse[letter]).join(" ");
+    var decode = (str) => str.split(" ").map((morse) => fromMorse[morse]).join("");
+    module2.exports = {
+      encode,
+      decode
+    };
+  }
+});
+
+// node_modules/morsee/index.js
+var require_morsee = __commonJS({
+  "node_modules/morsee/index.js"(exports2, module2) {
+    var { encode, decode } = require_lib3();
+    module2.exports = {
+      encode,
+      decode
+    };
+  }
+});
+
 // lib/session.js
 var require_session = __commonJS({
   "lib/session.js"(exports2, module2) {
@@ -20862,6 +21026,7 @@ var require_session = __commonJS({
       signalBar
     } = require_radio();
     var { renderFrame, BOIL_MS } = require_screen();
+    var morsee = require_morsee();
     function pickStartFreq(hub2) {
       const live = hub2.liveSessions();
       if (live.length > 0) {
@@ -21279,6 +21444,9 @@ var require_session = __commonJS({
           case "stats":
             this.cmdStats();
             break;
+          case "cw":
+            this.cmdCw(arg);
+            break;
           case "quit":
           case "exit":
           case "q":
@@ -21393,6 +21561,22 @@ var require_session = __commonJS({
         const live = this.hub.liveSessions();
         const near = this.hub.nearby(this.freq, MAX_AUDIBLE).length;
         this.systemSay(live.length + " on air worldwide, " + near + " near " + this.freq.toFixed(1) + " MHz");
+      }
+      // easter egg - tap a message as morse code (uses morsee).
+      cmdCw(arg) {
+        const text = (arg || "").trim();
+        if (!text) {
+          this.systemSay("usage: /cw hello world");
+          return;
+        }
+        let morse;
+        try {
+          morse = "  " + morsee.encode(text).split(" ").join("  ") + "  ";
+        } catch (e) {
+          this.systemSay("couldn't tap that out. letters and numbers only.");
+          return;
+        }
+        this.hub.broadcast(this, morse);
       }
     };
     function sanitizeHandle(raw) {

@@ -6,14 +6,19 @@
 
 (*Because somebody said "what if there can be a radio where strangers can talk" and nobody stopped them.*)
 
+
 (*And also cuz the [Crescent's multiplayer card](https://crescent.hackclub.com/guides/multiplayer) gave me a new reason for creating my this long envisioned project.*)
 
 ## *How it works:*
 
 *Your terminal connects over ssh, and boom you are in a terminal where you can talk to anybody worldwide just radio and you*
 
-## *Try it(yay!!):*
+*As you change through frequency there are few things to mind:*
+- Someone can only read message from peoples on same frequency they are.
+- If you are close enough to some frequency where peoples are talking, you can see thier messages but jumbled(with distortion).
+- The message doodle of a person turns green in message indicating that you are on same frequency as that person is. 
 
+## *Try it(yay!!):*
 
 ```
 ssh -p 3453 2a01:4f9:3080:3192::1994
