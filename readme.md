@@ -21,7 +21,7 @@
 ## *Try it(yay!!):*
 
 ```
-ssh -p 3453 2a01:4f9:3080:3192::1994
+ssh -p 15801 bore.pub
 ```
 
 (*this is a public server, but you can always host your own copy of it, yeh really its here in this repo itself.*)
