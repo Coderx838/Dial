@@ -12,7 +12,7 @@
 
 *Your terminal connects over ssh, and boom you are in a terminal where you can talk to anybody worldwide just radio and you*
 
-*As you change through frequency there are few things to mind:*
+*As you change through frequencies there are few things to mind:*
 - Someone can only read message from people on same frequency they are.
 - If you are close enough to a frequency where people are talking, you can see their messages, but they will be jumbled with distortion.
 - The message doodle of a person turns green in message indicating that you are on same frequency as that person is. 
