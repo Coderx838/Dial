@@ -6,7 +6,6 @@
 
 (*Because somebody said "what if there can be a radio where strangers can talk" and nobody stopped them.*)
 
-
 (*And also cuz the [Crescent's multiplayer card](https://crescent.hackclub.com/guides/multiplayer) gave me a new reason for creating my this long envisioned project.*)
 
 ## *How it works:*

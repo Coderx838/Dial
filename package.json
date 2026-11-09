@@ -1,6 +1,6 @@
 {
   "name": "dial",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "a little radio chat you ssh into. turn the dial, hear who's near you.",
   "main": "server.js",
   "scripts": {
