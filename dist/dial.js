@@ -20260,6 +20260,7 @@ var require_hub = __commonJS({
         this.nextSessionId = 1;
         this.nextMsgId = 1;
         this.maxHistory = 400;
+        this.handshakes = /* @__PURE__ */ new Set();
       }
       add(session) {
         session.id = this.nextSessionId++;
@@ -20314,7 +20315,9 @@ var require_hub = __commonJS({
           id: this.nextMsgId++,
           handle: fromSession.handle,
           doodleIdx: fromSession.doodleIdx,
+          item: fromSession.worn,
           freq: fromSession.freq,
+          date: nowDate(),
           time: nowHM(),
           text
         };
@@ -20335,6 +20338,7 @@ var require_hub = __commonJS({
           doodleIdx: -1,
           freq,
           time: nowHM(),
+          date: nowDate(),
           text,
           system: true
         };
@@ -20359,12 +20363,45 @@ var require_hub = __commonJS({
         }
         return out;
       }
+      handshakesKey(a, b) {
+        return a < b ? a + "|" + b : b + "|" + a;
+      }
+      isHandshakeDone(id1, id2) {
+        return this.handshakes.has(this.handshakesKey(id1, id2));
+      }
+      recordHandshake(id1, id2) {
+        this.handshakes.add(this.handshakesKey(id1, id2));
+      }
+      checkHandshakes(session, autoEquipAllowed) {
+        const peers = this.nearby(session.freq, 0.05).filter(
+          (S) => S.id !== session.id && S.phase === "chat"
+        );
+        const itemPool = ["^", "<>", "[]", "*", "~"];
+        for (const peer of peers) {
+          if (this.isHandshakeDone(session.id, peer.id)) continue;
+          this.recordHandshake(session.id, peer.id);
+          const item = itemPool[Math.floor(Math.random() * itemPool.length)];
+          session.inventory.add(item);
+          peer.inventory.add(item);
+          const equip = autoEquipAllowed && session.autoEquip && peer.autoEquip;
+          if (equip) {
+            session.worn = item;
+            peer.worn = item;
+          }
+          const announceText = "~" + session.handle + " shook hands with " + peer.handle + " at " + session.freq.toFixed(1) + " MHz ~";
+          this.announce(announceText, session.freq);
+        }
+      }
     };
     function nowHM() {
       const d = /* @__PURE__ */ new Date();
       const h = String(d.getHours()).padStart(2, "0");
       const m = String(d.getMinutes()).padStart(2, "0");
       return h + ":" + m;
+    }
+    function nowDate() {
+      const d = /* @__PURE__ */ new Date();
+      return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
     }
     module2.exports = { Hub: Hub2 };
   }
@@ -20529,7 +20566,22 @@ var require_doodles = __commonJS({
       { top: "(o_o)/", bot: "/| |\\" },
       { top: "(^-^)b", bot: "/| |\\" },
       { top: "(:3)", bot: "/| |\\" },
-      { top: "(o,-)o", bot: "/| |\\" }
+      { top: "(o,-)o", bot: "/| |\\" },
+      { top: "(oOo)", bot: "/| |\\" },
+      { top: "(@_@)", bot: "/| |\\" },
+      { top: "(*_*)", bot: "/| |\\" },
+      { top: "(o.o)", bot: "/| |\\" },
+      { top: "(=^_^=)", bot: "/| |\\" },
+      { top: "(o.O)", bot: "/| |\\" },
+      { top: "(*o*)", bot: "/| |\\" },
+      { top: "(v_v)", bot: "/| |\\" },
+      { top: "(x_x)", bot: "/| |\\" },
+      { top: "(-_-)", bot: "/| |\\" },
+      { top: "(>.<)", bot: "/| |\\" },
+      { top: "(*.*)", bot: "/| |\\" },
+      { top: "(^.^)", bot: "/| |\\" },
+      { top: "(^_^)", bot: "/| |\\" },
+      { top: "(o^o)", bot: "/| |\\" }
     ];
     function getDoodle(i) {
       return DOODLES[(i % DOODLES.length + DOODLES.length) % DOODLES.length];
@@ -20572,31 +20624,57 @@ var require_screen = __commonJS({
     } = require_radio();
     var { getDoodle } = require_doodles();
     var BOIL_MS = 320;
+    function dateLabel(time, date) {
+      if (!date) return time;
+      const today = /* @__PURE__ */ new Date();
+      const todayStr = today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, "0") + "-" + String(today.getDate()).padStart(2, "0");
+      if (date === todayStr) return time;
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.getFullYear() + "-" + String(yesterday.getMonth() + 1).padStart(2, "0") + "-" + String(yesterday.getDate()).padStart(2, "0");
+      if (date === yesterdayStr) return "Yday " + time;
+      return date.slice(5) + " " + time;
+    }
     function renderFrame(session, hub2, boilFrame2) {
       const theme = session.theme;
       const cols = session.cols;
       const rows = session.rows;
       const parts = [];
+      let inputParts = null;
       parts.push([[tornEdge(cols, boilFrame2), theme.muted]]);
       parts.push(headerRow(session, theme, cols, boilFrame2));
       parts.push([[wobbleLine(cols, boilFrame2, "top"), theme.ink]]);
-      const chatTop = 3;
-      const footerRows = 4;
-      const chatHeight = Math.max(1, rows - chatTop - footerRows);
-      const chatLines = buildChat(session, hub2, cols, theme, boilFrame2);
-      let slice = chatLines.slice(-chatHeight);
-      const pad = chatHeight - slice.length;
-      for (let i = 0; i < pad; i++) {
-        parts.push(marginRow("", cols, theme));
+      if (session.showingHelp && session.helpLines && session.helpLines.length) {
+        const helpStart = 3;
+        const helpHeight = Math.max(1, rows - helpStart - 2);
+        let hi = 0;
+        for (let i = 0; i < helpHeight; i++) {
+          let line = session.helpLines[hi] || "";
+          hi++;
+          line = line + " ".repeat(Math.max(0, cols - visibleWidth(line)));
+          parts.push([[line, theme.ink]]);
+        }
+        parts.push([[wobbleLine(cols, boilFrame2 + 1, "bot"), theme.ink]]);
+        parts.push(statusRow(session, hub2, theme, cols));
+      } else {
+        const chatTop = 3;
+        const footerRows = 4;
+        const chatHeight = Math.max(1, rows - chatTop - footerRows);
+        const chatLines = buildChat(session, hub2, cols, theme, boilFrame2);
+        let slice = chatLines.slice(-chatHeight);
+        const pad = chatHeight - slice.length;
+        for (let i = 0; i < pad; i++) {
+          parts.push(marginRow("", cols, theme));
+        }
+        for (const line of slice) {
+          parts.push(line);
+        }
+        parts.push(marginRow(dotLine(Math.max(0, cols - 6), boilFrame2), cols, theme, theme.muted));
+        inputParts = buildInput(session, theme, cols);
+        parts.push(inputParts.row);
+        parts.push([[wobbleLine(cols, boilFrame2 + 1, "bot"), theme.ink]]);
+        parts.push(statusRow(session, hub2, theme, cols));
       }
-      for (const line of slice) {
-        parts.push(line);
-      }
-      parts.push(marginRow(dotLine(Math.max(0, cols - 6), boilFrame2), cols, theme, theme.muted));
-      const inputParts = buildInput(session, theme, cols);
-      parts.push(inputParts.row);
-      parts.push([[wobbleLine(cols, boilFrame2 + 1, "bot"), theme.ink]]);
-      parts.push(statusRow(session, hub2, theme, cols));
       while (parts.length < rows) {
         parts.push(marginRow("", cols, theme));
       }
@@ -20609,9 +20687,17 @@ var require_screen = __commonJS({
         if (i > 0) out += "\r\n";
         out += styledLine(padParts(parts[i], cols), theme);
       }
-      out += moveCursor(inputParts.cursorRow, inputParts.cursorCol);
+      if (session.showingHelp) {
+        out += moveCursor(rows, 1);
+      } else {
+        out += moveCursor(inputParts.cursorRow, inputParts.cursorCol);
+      }
       out += CURSOR_SHOW;
-      return { output: out, cursorRow: inputParts.cursorRow, cursorCol: inputParts.cursorCol };
+      return {
+        output: out,
+        cursorRow: session.showingHelp ? rows : inputParts.cursorRow,
+        cursorCol: session.showingHelp ? 1 : inputParts.cursorCol
+      };
     }
     function headerRow(session, theme, cols, frame) {
       const title = " ~* [ D I A L ] *~ ";
@@ -20680,7 +20766,8 @@ var require_screen = __commonJS({
           bubbleCol = theme.ink;
         }
         const distortedHandle = distort(msg.handle, strength * 0.6, msg.id);
-        const label = "  " + msg.time + "  <" + distortedHandle + ">";
+        const datePart = dateLabel(msg.time, msg.date);
+        const label = "  " + datePart + "  <" + distortedHandle + ">";
         out.push(marginRow(label, cols, theme, handleCol));
         const distortedText = distort(msg.text, strength, msg.id);
         const bubbleRows = bubble(distortedText, bubbleWidth, frame, bubbleCol, theme);
@@ -20707,6 +20794,14 @@ var require_screen = __commonJS({
             ["| ", theme.margin],
             [dBot, theme.accent]
           ]);
+          const itemChar = msg.item;
+          if (itemChar) {
+            const dItem = " ".repeat(avatarIndent) + itemChar;
+            out.push([
+              ["| ", theme.margin],
+              [dItem, theme.accent]
+            ]);
+          }
         }
         out.push(marginRow("", cols, theme));
       }
@@ -21057,6 +21152,13 @@ var require_session = __commonJS({
         this.rendering = false;
         this.closed = false;
         this.ctrlCArmed = false;
+        this.inventory = /* @__PURE__ */ new Set();
+        this.worn = null;
+        this.autoEquip = true;
+        this.serverAutoEquip = true;
+        this.pendingDoodle = "";
+        this.showingHelp = false;
+        this.helpLines = [];
         hub2.add(this);
       }
       // ---- lifecycle ------------------------------------------------------------
@@ -21143,6 +21245,7 @@ var require_session = __commonJS({
         this.input = "";
         this.cursor = 0;
         this.hub.announce(this.handle + " tuned in nearby", this.freq);
+        this.hub.checkHandshakes(this, this.serverAutoEquip !== false);
         this.renderNow();
       }
       // ---- rendering ------------------------------------------------------------
@@ -21255,24 +21358,43 @@ var require_session = __commonJS({
             this.close();
             return;
           }
-          const n = parseInt(ch, 10);
-          if (!isNaN(n) && n >= 1 && n <= DOODLES.length && ch.length === 1) {
-            this.doodleIdx = n - 1;
-            this.stream.write(ch + "\r\n");
-            const t = this.theme;
-            let out = "\r\n";
-            out += styledLine([["   ok " + this.handle + ", you're ", t.ink]], t);
-            out += styledLine([[doodleLabel(this.doodleIdx), t.accent]], t);
-            out += styledLine([[". welcome to the band.", t.ink]], t);
-            out += "\r\n";
-            out += styledLine([["   ( <- -> tunes the dial, /help lists commands )", t.muted]], t);
-            out += "\r\n\r\n";
-            this.stream.write(out);
-            setTimeout(() => {
-              if (!this.closed) this.enterChat();
-            }, 600);
-            this.phase = "joining";
+          if (ch === "\r" || ch === "\n") {
+            const n = parseInt(this.pendingDoodle, 10);
+            if (!isNaN(n) && n >= 1 && n <= DOODLES.length) {
+              this.doodleIdx = n - 1;
+              this.pendingDoodle = "";
+              this.stream.write("\r\n");
+              const t = this.theme;
+              let out = "\r\n";
+              out += styledLine([["   ok " + this.handle + ", you're ", t.ink]], t);
+              out += styledLine([[doodleLabel(this.doodleIdx), t.accent]], t);
+              out += styledLine([[". welcome to the band.", t.ink]], t);
+              out += "\r\n";
+              out += styledLine([["   ( <- -> tunes the dial, /help lists commands )", t.muted]], t);
+              out += "\r\n\r\n";
+              this.stream.write(out);
+              setTimeout(() => {
+                if (!this.closed) this.enterChat();
+              }, 600);
+              this.phase = "joining";
+              return;
+            } else {
+              this.pendingDoodle = "";
+              this.stream.write("\r\n not a face number. try again: >");
+              this.stream.write(CURSOR_SHOW);
+            }
             return;
+          }
+          if (ch === "\x7F" || ch === "\b") {
+            if (this.pendingDoodle.length > 0) {
+              this.pendingDoodle = this.pendingDoodle.slice(0, -1);
+              this.stream.write("\b \b");
+            }
+            continue;
+          }
+          if (ch >= 0 && ch <= "9" && this.pendingDoodle.length < 2) {
+            this.pendingDoodle += ch;
+            this.stream.write(ch);
           }
         }
       }
@@ -21295,6 +21417,10 @@ var require_session = __commonJS({
         }
       }
       handleKey(key) {
+        if (this.showingHelp) {
+          this.showingHelp = false;
+          this.markDirty();
+        }
         if (key === "") {
           if (this.ctrlCArmed) {
             this.sayGoodbye();
@@ -21390,6 +21516,7 @@ var require_session = __commonJS({
         this.ctrlCArmed = false;
         this.markDirty();
         this.renderNow();
+        this.hub.checkHandshakes(this, this.serverAutoEquip !== false);
       }
       sendMessage() {
         const text = this.input.trim();
@@ -21447,6 +21574,13 @@ var require_session = __commonJS({
           case "cw":
             this.cmdCw(arg);
             break;
+          case "wear":
+            this.cmdWear(arg);
+            break;
+          case "autoequip":
+          case "auto-eq":
+            this.cmdAutoEquip(arg);
+            break;
           case "quit":
           case "exit":
           case "q":
@@ -21484,9 +21618,10 @@ var require_session = __commonJS({
           "   and consonants start dropping out.",
           ""
         ];
-        for (const line of lines) {
-          this.hub.announce(line, this.freq);
-        }
+        this.helpLines = lines;
+        this.showingHelp = true;
+        this.markDirty();
+        this.renderNow();
       }
       cmdTheme(arg) {
         const name = (arg || "").toLowerCase().trim();
@@ -21577,6 +21712,38 @@ var require_session = __commonJS({
           return;
         }
         this.hub.broadcast(this, morse);
+      }
+      cmdWear(arg) {
+        const name = (arg || "").trim().toLowerCase();
+        const itemMap = { hat: "^", flag: "<>", badge: "[]", pin: "*", ribbon: "~" };
+        if (name === "none" || name === "") {
+          this.worn = null;
+          this.systemSay("item cleared");
+          return;
+        }
+        const item = itemMap[name];
+        if (!item) {
+          this.systemSay("no such iteam. try: /wear hat");
+          return;
+        }
+        if (!this.inventory.has(item)) {
+          this.systemSay("you don't have that item ye. shake hands on a shared freq first.");
+          return;
+        }
+        this.worn = item;
+        this.systemSay("now wearing:" + item);
+      }
+      cmdAutoEquip(arg) {
+        const name = (arg || "").trim().toLowerCase();
+        if (name === "on" || name === "1" || name === "true") {
+          this.autoEquip = true;
+          this.systemSay("auto-equip on.");
+        } else if (name === "off" || name === "0" || name === "false") {
+          this.autoEquip = false;
+          this.systemSay("auto-equip off. handshake items go to inventory only.");
+        } else {
+          this.systemSay("auto-equip is" + (this.autoEquip ? "on" : "off") + " (server-wide:" + (this.serverAutoEquip !== false ? "on" : "off") + ")");
+        }
       }
     };
     function sanitizeHandle(raw) {
