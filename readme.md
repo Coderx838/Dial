@@ -18,14 +18,6 @@
 - The message doodle of a person turns green in message indicating that you are on same frequency as that person is. 
 - yeh that's all now go try yourself.
 
-## *Try it(yay!!):*
-
-```
-ssh -p 15801 bore.pub
-```
-
-(*this is a public server, but you can always host your own copy of it, yeh really its here in this repo itself.*)
-
 
 ## *Screenshot:*
 
